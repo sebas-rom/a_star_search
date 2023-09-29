@@ -4,6 +4,7 @@ from time import time
 class State:
 
     DIRECTIONS = ['←', '→', '↑', '↓']
+
     def __init__(self, state, parent, direction, depth, cost, goal):
         self.state = state
         self.parent = parent
@@ -26,35 +27,45 @@ class State:
         return self.state == self.goal
 
     def manhattan_distance(self, n):
-        self.heuristic = 0
-        for i in range(1, n * n):
-            distance = abs(self.state.index(i) - self.goal.index(i))
-            self.heuristic = self.heuristic + distance // n + distance % n
+        state_tuple = tuple(self.state)  # Convert the list to a tuple
+        if state_tuple in memoized_heuristics:
+            return memoized_heuristics[state_tuple]
 
-        self.a_star_evaluation = self.heuristic + self.cost
-        return self.a_star_evaluation
+        heuristic = 0
+        for i in range(1, n * n):
+            distance = abs(state_tuple.index(i) - self.goal.index(i))
+            heuristic = heuristic + distance // n + distance % n
+
+        a_star_evaluation = heuristic + self.cost
+        memoized_heuristics[state_tuple] = a_star_evaluation
+        return a_star_evaluation
 
     def manhattan_modified(self, n):
-        self.heuristic = 0
-        for i in range(1, 9):
-            if i!= 'a':
-                distance = abs(i - (i-1)//n) + abs((i-1)%n - (i-1)//n)
-                self.heuristic += distance
-        self.AStar_evaluation = self.heuristic + self.cost
-        return self.AStar_evaluation
+        state_tuple = tuple(self.state)  # Convert the list to a tuple
+        if state_tuple in memoized_heuristics:
+            return memoized_heuristics[state_tuple]
 
+        heuristic = 0
+        for i in range(1, 9):
+            if i != 'a':
+                distance = abs(i - (i - 1) // n) + abs((i - 1) % n - (i - 1) // n)
+                heuristic += distance
+
+        AStar_evaluation = heuristic + self.cost
+        memoized_heuristics[state_tuple] = AStar_evaluation
+        return AStar_evaluation
 
     @staticmethod
     def available_moves(x, n):
         moves = State.DIRECTIONS.copy()
         if x % n == 0:
-            moves.remove('←') #Left
+            moves.remove('←')  # Left
         if x % n == n - 1:
-            moves.remove('→') #Right
+            moves.remove('→')  # Right
         if x - n < 0:
-            moves.remove('↑') #Up
+            moves.remove('↑')  # Up
         if x + n > n * n - 1:
-            moves.remove('↓') #Down
+            moves.remove('↓')  # Down
         return moves
 
     def expand(self, n):
@@ -63,13 +74,13 @@ class State:
         children = []
         for direction in moves:
             temp = self.state.copy()
-            if direction == '←': #Left
+            if direction == '←':  # Left
                 temp[x], temp[x - 1] = temp[x - 1], temp[x]
-            elif direction == '→': #Right
+            elif direction == '→':  # Right
                 temp[x], temp[x + 1] = temp[x + 1], temp[x]
-            elif direction == '↑': #Up
+            elif direction == '↑':  # Up
                 temp[x], temp[x - n] = temp[x - n], temp[x]
-            elif direction == '↓': #Down
+            elif direction == '↓':  # Down
                 temp[x], temp[x + n] = temp[x + n], temp[x]
             children.append(State(temp, self, direction, self.depth + 1, 1, self.goal))
         return children
@@ -85,13 +96,13 @@ class State:
         solution.reverse()
         return solution
 
-def a_star_search(given_state, n, verbose=False, getTime = False):  # Add a 'verbose' parameter
+def a_star_search(given_state, n, verbose=False, getTime=False):
     # Start measuring the time
     start_time = time()
     frontier = PriorityQueue()
-    explored = []
+    explored = set()  # Use a set to store explored states
     counter = 0
-    goal= determine_goal_state(given_state)
+    goal = determine_goal_state(given_state)
     root = State(given_state, None, None, 0, 0, goal)
     if root.has_letters():
         evaluation = root.manhattan_modified(n)
@@ -102,11 +113,11 @@ def a_star_search(given_state, n, verbose=False, getTime = False):  # Add a 'ver
     while not frontier.empty():
         current_node = frontier.get()
         current_node = current_node[2]
-        explored.append(current_node.state)
+        explored.add(tuple(current_node.state))  # Convert the list to a tuple
 
         if current_node.is_goal():
-            if verbose:  # Check if verbose is True
-                   print_board_solution(given_state,current_node.solution())
+            if verbose:
+                print_board_solution(given_state, current_node.solution())
             # Calculate the time taken for this run
             end_time = time()
             elapsed_time = end_time - start_time
@@ -116,20 +127,20 @@ def a_star_search(given_state, n, verbose=False, getTime = False):  # Add a 'ver
 
         children = current_node.expand(n)
         for child in children:
-            if child.state not in explored:
+            if tuple(child.state) not in explored:  # Convert the list to a tuple
                 counter += 1
                 if child.has_letters():
                     evaluation = child.manhattan_modified(n)
                 else:
                     evaluation = child.manhattan_distance(n)
                 frontier.put((evaluation, counter, child))
-                
+
     # Calculate the time taken if no solution is found
     end_time = time()
     elapsed_time = end_time - start_time
     print(f"No solution found. Time taken: {elapsed_time} seconds")
     return None
-
+    
 def determine_goal_state(pattern):
     GOAL_STATE_1 = [1, 2, 3, 4, 'a', 'a', 'a', 'a', 0]
     GOAL_STATE_2 = ['a', 'a', 'a', 'a', 5, 6, 7, 8, 0]
@@ -151,7 +162,6 @@ def print_state(state, n):
         if i < n - 1:
             print("-" * (n * 4 - 1))  # Separator between rows
     print("\n")
-
 
 def print_board_solution(root, solution):
     n = int(len(root) ** 0.5)
@@ -199,24 +209,22 @@ def create_patterns(input_list):
 
 def number_of_moves(input_list):
     n = 3
-    result= []
-    cost=0
+    result = []
+    cost = 0
     patterns = create_patterns(input_list)
     for root in patterns:
-        # print(root)
         result.append(root)
     for root in patterns:
-        a_star_solution = a_star_search(root, n, verbose=False)  # Enable verbose output
+        a_star_solution = a_star_search(root, n, verbose=False)
         number_of_moves = len(a_star_solution[0])
         result.append(number_of_moves)
-        #print('Number of movements is ', number_of_moves)
         cost += number_of_moves
     result.append(cost)
     return result
 
 def inv_num(puzzle):
     inv = 0
-    for i in range(len(puzzle)-1):
+    for i in range(len(puzzle) - 1):
         for j in range(i + 1, len(puzzle)):
             if puzzle[i] > puzzle[j] and puzzle[i] and puzzle[j]:
                 inv += 1
@@ -225,6 +233,11 @@ def inv_num(puzzle):
 def solvable(puzzle):
     inv_counter = inv_num(puzzle)
     return inv_counter % 2 == 0
-# input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
-# resultado=number_of_moves(input_list)
-# print(resultado)
+
+# Global variable to store memoized heuristic values
+memoized_heuristics = {}
+
+# Example input_list
+input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
+result = number_of_moves(input_list)
+print(result)
