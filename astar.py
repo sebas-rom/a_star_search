@@ -85,7 +85,7 @@ class State:
         solution.reverse()
         return solution
 
-def a_star_search(given_state, n, verbose=False):  # Add a 'verbose' parameter
+def a_star_search(given_state, n, verbose=False, getTime = False):  # Add a 'verbose' parameter
     # Start measuring the time
     start_time = time()
     frontier = PriorityQueue()
@@ -110,7 +110,8 @@ def a_star_search(given_state, n, verbose=False):  # Add a 'verbose' parameter
             # Calculate the time taken for this run
             end_time = time()
             elapsed_time = end_time - start_time
-            print(f"Time taken: {elapsed_time} seconds")
+            if getTime:
+                print(f"Time taken: {elapsed_time} seconds")
             return current_node.solution(), len(explored)
 
         children = current_node.expand(n)
@@ -152,7 +153,7 @@ def print_state(state, n):
     print("\n")
 
 
-def print_board_solution(root, solution, horizontal=False):
+def print_board_solution(root, solution):
     n = int(len(root) ** 0.5)
     current_state = root.copy()
 
