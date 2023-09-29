@@ -8,6 +8,9 @@ import multiprocessing  # Import the multiprocessing module
 # Global variable to signal the threads to stop
 stop_threads = False
 
+# Global variable to record the start time
+start_time = None
+
 def get_available_threads():
     # Get the number of CPU cores
     num_cores = os.cpu_count()
@@ -65,6 +68,9 @@ def process_state(state_tuple):
 
 def visit_unvisited_states(x=500, num_threads=get_available_threads()):
     global stop_threads
+    global start_time  # Use the global start_time variable
+
+    start_time = time.time()  # Record the start time
     print("Using {} threads.".format(num_threads))
     conn = sqlite3.connect('puzzle_database.db', check_same_thread=False)
     cursor = conn.cursor()
@@ -73,7 +79,6 @@ def visit_unvisited_states(x=500, num_threads=get_available_threads()):
     cursor.execute('SELECT state FROM puzzles WHERE visited = 0 AND cost_total IS NULL')
     unvisited_states = cursor.fetchall()
 
-    start_time = time.time()  # Record the start time
     count = 0
 
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
@@ -83,7 +88,6 @@ def visit_unvisited_states(x=500, num_threads=get_available_threads()):
 
             executor.submit(process_state, state_tuple)
             count += 1
-
 
     # Wait for all threads to finish before closing the connection
     executor.shutdown()
@@ -102,4 +106,7 @@ try:
     visit_unvisited_states()
 except KeyboardInterrupt:
     stop_threads = True
+    end_time = time.time()  # Record the end time on keyboard interrupt
+    elapsed_time = end_time - start_time  # Calculate elapsed time
     print("Program terminated by user.")
+    print("Elapsed time: {:.2f} seconds".format(elapsed_time))
