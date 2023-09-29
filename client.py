@@ -14,7 +14,5 @@ if solvable(root):
     a_star_solution = a_star_search(root, n, verbose=True)  # Enable verbose output
     print('A* Solution is ', a_star_solution[0])
     print('Number of explored nodes is ', a_star_solution[1])
-
-
 else:
     print("Not solvable")
