@@ -202,7 +202,7 @@ def number_of_moves(input_list):
     cost=0
     patterns = create_patterns(input_list)
     for root in patterns:
-        print(root)
+        # print(root)
         result.append(root)
     for root in patterns:
         a_star_solution = a_star_search(root, n, verbose=False)  # Enable verbose output

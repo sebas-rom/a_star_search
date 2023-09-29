@@ -1,4 +1,3 @@
-import astar
 from astar import solvable
 from astar import a_star_search
 
