@@ -1,6 +1,9 @@
 from queue import PriorityQueue
 from time import time
 
+# Global variable to store memoized heuristic values
+memoized_heuristics = {}
+
 class State:
 
     DIRECTIONS = ['←', '→', '↑', '↓']
@@ -234,10 +237,9 @@ def solvable(puzzle):
     inv_counter = inv_num(puzzle)
     return inv_counter % 2 == 0
 
-# Global variable to store memoized heuristic values
-memoized_heuristics = {}
 
-# Example input_list
-input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
-result = number_of_moves(input_list)
-print(result)
+
+# # Example input_list
+# input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
+# result = number_of_moves(input_list)
+# print(result)
