@@ -15,6 +15,7 @@ class State:
         self.goal = goal
         self.n = n
         self.valid_moves = self.calculate_valid_moves()
+        self.state_tuple = tuple(self.state)
 
         if parent:
             self.cost = parent.cost + cost
@@ -31,25 +32,22 @@ class State:
         return self.state == self.goal
 
     def manhattan_distance(self):
-        state_tuple = tuple(self.state)  # Convert the list to a tuple
-        if state_tuple in memoized_heuristics:  # Check if the state has been memoized
-            return memoized_heuristics[state_tuple]
+        if self.state_tuple in memoized_heuristics:
+            return memoized_heuristics[self.state_tuple]
 
         heuristic = 0
         for i in range(1, self.n * self.n):
-            distance = abs(state_tuple.index(i) - self.goal.index(i))
+            distance = abs(self.state_tuple.index(i) - self.goal.index(i))
             heuristic = heuristic + distance // self.n + distance % self.n
 
         a_star_evaluation = heuristic + self.cost
 
-        memoized_heuristics[state_tuple] = a_star_evaluation  # Memoize the heuristic value
+        memoized_heuristics[self.state_tuple] = a_star_evaluation  # Memoize the heuristic value
         return a_star_evaluation
 
     def manhattan_modified(self):
-        state_tuple = tuple(self.state)  # Convert the list to a tuple
-        if state_tuple in memoized_heuristics:
-            # print(" found memoized")
-            return memoized_heuristics[state_tuple]
+        if self.state_tuple in memoized_heuristics:
+            return memoized_heuristics[self.state_tuple]
 
         heuristic = 0
         for i in range(1, self.n * self.n):
@@ -58,15 +56,17 @@ class State:
                 heuristic += distance
 
         AStar_evaluation = heuristic + self.cost
-        memoized_heuristics[state_tuple] = AStar_evaluation
+        memoized_heuristics[self.state_tuple] = AStar_evaluation
         return AStar_evaluation
 
     def expand(self):
         x = self.state.index(0)
         moves = self.valid_moves  # Use the precalculated valid moves
         children = []
+
         for direction in moves:
-            temp = self.state.copy()
+            temp = self.state[:]  # Create a shallow copy of the current state
+
             if direction == '←':  # Left
                 temp[x], temp[x - 1] = temp[x - 1], temp[x]
             elif direction == '→':  # Right
@@ -75,7 +75,9 @@ class State:
                 temp[x], temp[x - self.n] = temp[x - self.n], temp[x]
             elif direction == '↓':  # Down
                 temp[x], temp[x + self.n] = temp[x + self.n], temp[x]
+
             children.append(State(temp, self, direction, self.depth + 1, 1, self.goal, self.n))
+
         return children
 
     def solution(self):
@@ -112,16 +114,21 @@ def a_star_search(given_state, n, verbose=False, getTime=False):
     counter = 0
     goal = determine_goal_state(given_state, n)
     root = State(given_state, None, None, 0, 0, goal, n)
+    
+    # Convert the root state to a tuple for use in explored set
+    explored.add(tuple(root.state))
+    
     if root.has_letters():
         evaluation = root.manhattan_modified()
     else:
         evaluation = root.manhattan_distance()
+    
     frontier.put((evaluation, counter, root))
 
     while not frontier.empty():
         current_node = frontier.get()
         current_node = current_node[2]
-        explored.add(tuple(current_node.state))  # Convert the list to a tuple
+        explored.add(tuple(current_node.state))  # Convert the list to a tuple and add to explored set
 
         if current_node.is_goal():
             if verbose:
@@ -135,7 +142,8 @@ def a_star_search(given_state, n, verbose=False, getTime=False):
 
         children = current_node.expand()
         for child in children:
-            if tuple(child.state) not in explored:  # Convert the list to a tuple
+            child_tuple = tuple(child.state)
+            if child_tuple not in explored:
                 counter += 1
                 if child.has_letters():
                     evaluation = child.manhattan_modified()
@@ -148,7 +156,6 @@ def a_star_search(given_state, n, verbose=False, getTime=False):
     elapsed_time = end_time - start_time
     print(f"No solution found. Time taken: {elapsed_time} seconds")
     return None
-    
 
 
 
@@ -258,7 +265,6 @@ def determine_goal_state(pattern,n):
 
 
 
-
 #functional
 def print_state(state, n):
     max_width = len(str(n * n - 1))  # Determine the maximum width for elements
@@ -309,23 +315,50 @@ def solvable(puzzle):
 
 
 # Example input_list
-input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
-result = number_of_moves(input_list,n=3)
-print(result)
+# input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
+# result = number_of_moves(input_list,n=3)
+# print(result)
 
 
 import cProfile
 
-# Your code...
-
 def main_function_name():
     # Call the function you want to profile here
-    input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
-    result = number_of_moves(input_list, n=3)
-    print(result)
+    # input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
+    # result = number_of_moves(input_list, n=3)
+    # print(result)
+
+    # root2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
+    # print("\n \n The given state is:", root2)
+
+    # if solvable(root2):
+    #     print("Solvable, please wait.\n")
+
+    #     a_star_solution2 = a_star_search(root2, n=4,verbose=False,getTime=True)  # Enable verbose output
+    #     print('A* Solution is ', a_star_solution2[0])
+    #     print('Number of explored nodes is ', a_star_solution2[1])
+    # else:
+    #     print("Not solvable")
+
+
+    # input_list2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
+    # result = number_of_moves(input_list2,n=4)
+    # print(result)
+
+    
+    a_star_solution2 = a_star_search(['a', 2, 3, 'a', 'a',4, 'a', 0, 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a'], n=4,verbose=False,getTime=True)  # Enable verbose output
+    print('A* Solution is ', a_star_solution2[0])
+    print('Number of explored nodes is ', a_star_solution2[1])
+
+    
+    # a_star_solution2 = a_star_search(['a', 'a', 'a', 'a', 'a', 'a', 7, 0, 'a', 'a', 8, 'a', 14, 12, 15, 11], n=4,verbose=False,getTime=True)  # Enable verbose output
+    # print('A* Solution is ', a_star_solution2[0])
+    # print('Number of explored nodes is ', a_star_solution2[1])
 
 if __name__ == "__main__":
     cProfile.run("main_function_name()", sort="cumulative")
+
+
 
 # print('\n \n \n 2 \n')
 # input_list2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
