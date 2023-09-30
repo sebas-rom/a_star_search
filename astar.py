@@ -5,15 +5,16 @@ from time import time
 memoized_heuristics = {}
 
 class State:
-
     DIRECTIONS = ['←', '→', '↑', '↓']
 
-    def __init__(self, state, parent, direction, depth, cost, goal):
+    def __init__(self, state, parent, direction, depth, cost, goal, n):
         self.state = state
         self.parent = parent
         self.direction = direction
         self.depth = depth
         self.goal = goal
+        self.n = n
+        self.valid_moves = self.calculate_valid_moves()
 
         if parent:
             self.cost = parent.cost + cost
@@ -29,51 +30,40 @@ class State:
     def is_goal(self):
         return self.state == self.goal
 
-    def manhattan_distance(self, n):
+    def manhattan_distance(self):
         state_tuple = tuple(self.state)  # Convert the list to a tuple
-        if state_tuple in memoized_heuristics:
+        if state_tuple in memoized_heuristics:  # Check if the state has been memoized
             return memoized_heuristics[state_tuple]
 
         heuristic = 0
-        for i in range(1, n * n):
+        for i in range(1, self.n * self.n):
             distance = abs(state_tuple.index(i) - self.goal.index(i))
-            heuristic = heuristic + distance // n + distance % n
+            heuristic = heuristic + distance // self.n + distance % self.n
 
         a_star_evaluation = heuristic + self.cost
-        memoized_heuristics[state_tuple] = a_star_evaluation
+
+        memoized_heuristics[state_tuple] = a_star_evaluation  # Memoize the heuristic value
         return a_star_evaluation
 
-    def manhattan_modified(self, n):
+    def manhattan_modified(self):
         state_tuple = tuple(self.state)  # Convert the list to a tuple
         if state_tuple in memoized_heuristics:
+            # print(" found memoized")
             return memoized_heuristics[state_tuple]
 
         heuristic = 0
-        for i in range(1, 9):
+        for i in range(1, self.n * self.n):
             if i != 'a':
-                distance = abs(i - (i - 1) // n) + abs((i - 1) % n - (i - 1) // n)
+                distance = abs(i - (i - 1) // self.n) + abs((i - 1) % self.n - (i - 1) // self.n)
                 heuristic += distance
 
         AStar_evaluation = heuristic + self.cost
         memoized_heuristics[state_tuple] = AStar_evaluation
         return AStar_evaluation
 
-    @staticmethod
-    def available_moves(x, n):
-        moves = State.DIRECTIONS.copy()
-        if x % n == 0:
-            moves.remove('←')  # Left
-        if x % n == n - 1:
-            moves.remove('→')  # Right
-        if x - n < 0:
-            moves.remove('↑')  # Up
-        if x + n > n * n - 1:
-            moves.remove('↓')  # Down
-        return moves
-
-    def expand(self, n):
+    def expand(self):
         x = self.state.index(0)
-        moves = self.available_moves(x, n)
+        moves = self.valid_moves  # Use the precalculated valid moves
         children = []
         for direction in moves:
             temp = self.state.copy()
@@ -82,10 +72,10 @@ class State:
             elif direction == '→':  # Right
                 temp[x], temp[x + 1] = temp[x + 1], temp[x]
             elif direction == '↑':  # Up
-                temp[x], temp[x - n] = temp[x - n], temp[x]
+                temp[x], temp[x - self.n] = temp[x - self.n], temp[x]
             elif direction == '↓':  # Down
-                temp[x], temp[x + n] = temp[x + n], temp[x]
-            children.append(State(temp, self, direction, self.depth + 1, 1, self.goal))
+                temp[x], temp[x + self.n] = temp[x + self.n], temp[x]
+            children.append(State(temp, self, direction, self.depth + 1, 1, self.goal, self.n))
         return children
 
     def solution(self):
@@ -99,18 +89,33 @@ class State:
         solution.reverse()
         return solution
 
+    def calculate_valid_moves(self):
+        x = self.state.index(0)
+        valid_moves = State.DIRECTIONS.copy()
+
+        if x % self.n == 0:
+            valid_moves.remove('←')  # Left
+        if x % self.n == self.n - 1:
+            valid_moves.remove('→')  # Right
+        if x - self.n < 0:
+            valid_moves.remove('↑')  # Up
+        if x + self.n > self.n * self.n - 1:
+            valid_moves.remove('↓')  # Down
+
+        return valid_moves
+
 def a_star_search(given_state, n, verbose=False, getTime=False):
     # Start measuring the time
     start_time = time()
     frontier = PriorityQueue()
     explored = set()  # Use a set to store explored states
     counter = 0
-    goal = determine_goal_state(given_state)
-    root = State(given_state, None, None, 0, 0, goal)
+    goal = determine_goal_state(given_state, n)
+    root = State(given_state, None, None, 0, 0, goal, n)
     if root.has_letters():
-        evaluation = root.manhattan_modified(n)
+        evaluation = root.manhattan_modified()
     else:
-        evaluation = root.manhattan_distance(n)
+        evaluation = root.manhattan_distance()
     frontier.put((evaluation, counter, root))
 
     while not frontier.empty():
@@ -128,14 +133,14 @@ def a_star_search(given_state, n, verbose=False, getTime=False):
                 print(f"Time taken: {elapsed_time} seconds")
             return current_node.solution(), len(explored)
 
-        children = current_node.expand(n)
+        children = current_node.expand()
         for child in children:
             if tuple(child.state) not in explored:  # Convert the list to a tuple
                 counter += 1
                 if child.has_letters():
-                    evaluation = child.manhattan_modified(n)
+                    evaluation = child.manhattan_modified()
                 else:
-                    evaluation = child.manhattan_distance(n)
+                    evaluation = child.manhattan_distance()
                 frontier.put((evaluation, counter, child))
 
     # Calculate the time taken if no solution is found
@@ -144,26 +149,125 @@ def a_star_search(given_state, n, verbose=False, getTime=False):
     print(f"No solution found. Time taken: {elapsed_time} seconds")
     return None
     
-def determine_goal_state(pattern):
-    GOAL_STATE_1 = [1, 2, 3, 4, 'a', 'a', 'a', 'a', 0]
-    GOAL_STATE_2 = ['a', 'a', 'a', 'a', 5, 6, 7, 8, 0]
-    GOAL_STATE_COMPLETE = [1, 2, 3, 4, 5, 6, 7, 8, 0]
 
-    if set(pattern) == set(GOAL_STATE_1):
-        return GOAL_STATE_1
-    elif set(pattern) == set(GOAL_STATE_2):
-        return GOAL_STATE_2
-    elif set(pattern) == set(GOAL_STATE_COMPLETE):
-        return GOAL_STATE_COMPLETE
+
+
+
+def number_of_moves(input_list,n):
+    result = [] 
+    cost = 0
+    patterns = create_patterns(input_list,n)
+    for pattern in patterns:
+        result.append(pattern)
+    for pattern in patterns:
+        print('/n solving: ',pattern)
+        a_star_solution = a_star_search(pattern, n, verbose=False)
+        number_of_moves = len(a_star_solution[0])
+        print('/n cost: ',number_of_moves)
+        result.append(number_of_moves)
+        cost += number_of_moves
+    result.append(cost)
+    return result  #########
+
+
+
+#reviewed
+def create_patterns(input_list,n):
+    if n == 3:
+        pattern1 = []
+        pattern2 = []
+
+        for num in input_list:
+            if num == 0:
+                pattern1.append(num)
+                pattern2.append(num)
+            elif 1 <= num <= 4:
+                pattern1.append(num)
+                pattern2.append('a')
+            elif 5 <= num <= 8:
+                pattern1.append('a')
+                pattern2.append(num)
+            else:
+                pattern1.append('a')
+                pattern2.append('a')
+
+        return pattern1, pattern2
+    if n ==4:
+        pattern1 = []
+        pattern2 = []
+        pattern3 = []
+        for num in input_list:
+            if num == 0:
+                pattern1.append(num)
+                pattern2.append(num)
+                pattern3.append(num)
+            elif num in [2,3,4]:
+                pattern1.append('a')
+                pattern2.append(num)
+                pattern3.append('a')
+            elif num in [1, 5, 6, 9, 10, 13]:
+                pattern1.append(num)
+                pattern2.append('a')
+                pattern3.append('a')
+            elif num in [7, 8, 11, 12, 14, 15]:
+                pattern1.append('a')
+                pattern2.append('a')
+                pattern3.append(num)
+        # print(pattern1,'\n')
+        # print(pattern2,'\n')
+        # print(pattern3,'\n')
+        return pattern1, pattern2, pattern3
     else:
-        return "Pattern does not match any goal state"
+        return None
 
+def determine_goal_state(pattern,n):
+    if n ==3:
+        GOAL_STATE_1 = [1, 2, 3, 4, 'a', 'a', 'a', 'a', 0]
+        GOAL_STATE_2 = ['a', 'a', 'a', 'a', 5, 6, 7, 8, 0]
+        GOAL_STATE_COMPLETE = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+
+        if set(pattern) == set(GOAL_STATE_1):
+            return GOAL_STATE_1
+        elif set(pattern) == set(GOAL_STATE_2):
+            return GOAL_STATE_2
+        elif set(pattern) == set(GOAL_STATE_COMPLETE):
+            return GOAL_STATE_COMPLETE
+        else:
+            return "Pattern does not match any goal state"
+    if n == 4:
+        GOAL_STATE_1 = [1, 'a', 'a', 'a', 5, 6, 'a', 'a', 9, 10, 'a', 'a', 13, 'a', 'a', 0] 
+        GOAL_STATE_2 = ['a', 2, 3, 4, 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a', 0] 
+        GOAL_STATE_3 = ['a', 'a', 'a', 'a', 'a', 'a', 7, 8, 'a', 'a', 11, 12, 'a', 14, 15, 0] 
+        GOAL_STATE_COMPLETE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]
+
+        if set(pattern) == set(GOAL_STATE_1):
+            print("Goal state 1")
+            return GOAL_STATE_1
+        elif set(pattern) == set(GOAL_STATE_2):
+            print("Goal state 2")
+            return GOAL_STATE_2
+        elif set(pattern) == set(GOAL_STATE_2):
+            print("Goal state 3")
+            return GOAL_STATE_3
+        elif set(pattern) == set(GOAL_STATE_COMPLETE):
+            print("Goal state complete")
+            return GOAL_STATE_COMPLETE
+        else:
+            return "Pattern does not match any goal state"
+
+
+
+
+
+#functional
 def print_state(state, n):
+    max_width = len(str(n * n - 1))  # Determine the maximum width for elements
     for i in range(n):
         row = state[i * n:(i + 1) * n]
-        print(" | ".join(map(str, row)))
+        formatted_row = [f"{item:>{max_width}}" if item != 0 else " " * max_width for item in row]
+        print(" | ".join(formatted_row))
         if i < n - 1:
-            print("-" * (n * 4 - 1))  # Separator between rows
+            print("-" * (n * (max_width + 3) - 1))  # Separator between rows
     print("\n")
 
 def print_board_solution(root, solution):
@@ -190,41 +294,6 @@ def print_board_solution(root, solution):
         print(move + ":")
         print_state(current_state, n)
 
-def create_patterns(input_list):
-    pattern1 = []
-    pattern2 = []
-
-    for num in input_list:
-        if num == 0:
-            pattern1.append(num)
-            pattern2.append(num)
-        elif 1 <= num <= 4:
-            pattern1.append(num)
-            pattern2.append('a')
-        elif 5 <= num <= 8:
-            pattern1.append('a')
-            pattern2.append(num)
-        else:
-            pattern1.append('a')
-            pattern2.append('a')
-
-    return pattern1, pattern2
-
-def number_of_moves(input_list):
-    n = 3
-    result = []
-    cost = 0
-    patterns = create_patterns(input_list)
-    for root in patterns:
-        result.append(root)
-    for root in patterns:
-        a_star_solution = a_star_search(root, n, verbose=False)
-        number_of_moves = len(a_star_solution[0])
-        result.append(number_of_moves)
-        cost += number_of_moves
-    result.append(cost)
-    return result
-
 def inv_num(puzzle):
     inv = 0
     for i in range(len(puzzle) - 1):
@@ -239,7 +308,40 @@ def solvable(puzzle):
 
 
 
-# # Example input_list
-# input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
-# result = number_of_moves(input_list)
+# Example input_list
+input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
+result = number_of_moves(input_list,n=3)
+print(result)
+
+
+import cProfile
+
+# Your code...
+
+def main_function_name():
+    # Call the function you want to profile here
+    input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
+    result = number_of_moves(input_list, n=3)
+    print(result)
+
+if __name__ == "__main__":
+    cProfile.run("main_function_name()", sort="cumulative")
+
+# print('\n \n \n 2 \n')
+# input_list2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
+# result = number_of_moves(input_list2,n=4)
 # print(result)
+
+
+# root2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
+
+# print("\n \n The given state is:", root2)
+
+# if solvable(root2):
+#     print("Solvable, please wait.\n")
+
+#     a_star_solution2 = a_star_search(root2, n=4,verbose=False,getTime=True)  # Enable verbose output
+#     print('A* Solution is ', a_star_solution2[0])
+#     print('Number of explored nodes is ', a_star_solution2[1])
+# else:
+#     print("Not solvable")
