@@ -4,6 +4,7 @@ from time import time
 # Global variable to store memoized heuristic values
 memoized_heuristics = {}
 
+#revisited
 class State:
     DIRECTIONS = ['←', '→', '↑', '↓']
 
@@ -157,9 +158,6 @@ def a_star_search(given_state, n, verbose=False, getTime=False):
     print(f"No solution found. Time taken: {elapsed_time} seconds")
     return None
 
-
-
-
 def number_of_moves(input_list,n):
     result = [] 
     cost = 0
@@ -177,8 +175,6 @@ def number_of_moves(input_list,n):
     return result  #########
 
 
-
-#reviewed
 def create_patterns(input_list,n):
     if n == 3:
         pattern1 = []
@@ -313,57 +309,12 @@ def solvable(puzzle):
     return inv_counter % 2 == 0
 
 
-
 # Example input_list
 # input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
 # result = number_of_moves(input_list,n=3)
 # print(result)
 
 
-import cProfile
-
-def main_function_name():
-    # Call the function you want to profile here
-    # input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
-    # result = number_of_moves(input_list, n=3)
-    # print(result)
-
-    # root2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
-    # print("\n \n The given state is:", root2)
-
-    # if solvable(root2):
-    #     print("Solvable, please wait.\n")
-
-    #     a_star_solution2 = a_star_search(root2, n=4,verbose=False,getTime=True)  # Enable verbose output
-    #     print('A* Solution is ', a_star_solution2[0])
-    #     print('Number of explored nodes is ', a_star_solution2[1])
-    # else:
-    #     print("Not solvable")
-
-
-    # input_list2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
-    # result = number_of_moves(input_list2,n=4)
-    # print(result)
-
-    
-    a_star_solution2 = a_star_search(['a', 2, 3, 'a', 'a',4, 'a', 0, 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a'], n=4,verbose=False,getTime=True)  # Enable verbose output
-    print('A* Solution is ', a_star_solution2[0])
-    print('Number of explored nodes is ', a_star_solution2[1])
-
-    
-    # a_star_solution2 = a_star_search(['a', 'a', 'a', 'a', 'a', 'a', 7, 0, 'a', 'a', 8, 'a', 14, 12, 15, 11], n=4,verbose=False,getTime=True)  # Enable verbose output
-    # print('A* Solution is ', a_star_solution2[0])
-    # print('Number of explored nodes is ', a_star_solution2[1])
-
-if __name__ == "__main__":
-    cProfile.run("main_function_name()", sort="cumulative")
-
-
-
-# print('\n \n \n 2 \n')
-# input_list2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
-# result = number_of_moves(input_list2,n=4)
-# print(result)
 
 
 # root2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
@@ -378,3 +329,57 @@ if __name__ == "__main__":
 #     print('Number of explored nodes is ', a_star_solution2[1])
 # else:
 #     print("Not solvable")
+
+
+
+
+# Not computing: 
+# print('\n \n \n  \n')
+# input_list2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
+# result = number_of_moves(input_list2,n=4)
+# print(result)
+
+
+
+
+# #optimization testing:
+# import cProfile
+
+# def main_function_name():
+#     # Call the function you want to profile here
+#     # input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
+#     # result = number_of_moves(input_list, n=3)
+#     # print(result)
+
+#     # root2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
+#     # print("\n \n The given state is:", root2)
+
+#     # if solvable(root2):
+#     #     print("Solvable, please wait.\n")
+
+#     #     a_star_solution2 = a_star_search(root2, n=4,verbose=False,getTime=True)  # Enable verbose output
+#     #     print('A* Solution is ', a_star_solution2[0])
+#     #     print('Number of explored nodes is ', a_star_solution2[1])
+#     # else:
+#     #     print("Not solvable")
+
+
+#     # input_list2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
+#     # result = number_of_moves(input_list2,n=4)
+#     # print(result)
+
+    
+#     a_star_solution2 = a_star_search(['a', 2, 3, 'a', 'a',4, 'a', 0, 'a', 'a', 'a', 'a', 'a', 'a', 'a', 'a'], n=4,verbose=False,getTime=True)  # Enable verbose output
+#     print('A* Solution is ', a_star_solution2[0])
+#     print('Number of explored nodes is ', a_star_solution2[1])
+
+    
+#     # a_star_solution2 = a_star_search(['a', 'a', 'a', 'a', 'a', 'a', 7, 0, 'a', 'a', 8, 'a', 14, 12, 15, 11], n=4,verbose=False,getTime=True)  # Enable verbose output
+#     # print('A* Solution is ', a_star_solution2[0])
+#     # print('Number of explored nodes is ', a_star_solution2[1])
+
+# if __name__ == "__main__":
+#     cProfile.run("main_function_name()", sort="cumulative")
+
+
+
