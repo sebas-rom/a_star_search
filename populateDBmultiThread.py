@@ -66,7 +66,7 @@ def process_state(state_tuple):
 
     return state
 
-def visit_unvisited_states(x=500, num_threads=get_available_threads()):
+def visit_unvisited_states(num_threads=get_available_threads()):
     global stop_threads
     global start_time  # Use the global start_time variable
 
