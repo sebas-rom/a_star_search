@@ -18,8 +18,8 @@ def list_to_text_state(state_list):
         print("Error converting list to text state:", str(e))
         return None
 
-def visit_unvisited_states(x=500):
-    conn = sqlite3.connect('puzzle_database.db')
+def visit_unvisited_states(x=500,n=3):
+    conn = sqlite3.connect('3x3DataBase.db')
     cursor = conn.cursor()
 
     # Select all entries where visited is 0 and cost_total is null
@@ -35,7 +35,7 @@ def visit_unvisited_states(x=500):
         state_list = text_state_to_list(state)
         
         # Call the number_of_moves function to get the updates
-        response = number_of_moves(state_list)
+        response = number_of_moves(state_list,n)
         
         sub_state_1 = list_to_text_state(response[0])
         sub_state_2 = list_to_text_state(response[1])
@@ -69,4 +69,4 @@ def visit_unvisited_states(x=500):
     print("Visited the whole database in {:.2f} seconds.".format(elapsed_time))
 
 # Call the function to visit unvisited states and measure the time
-visit_unvisited_states()
+visit_unvisited_states(n=3)
