@@ -1,6 +1,6 @@
 from queue import PriorityQueue
 from time import time
-
+from conection_database import select_heuristic_by_state, create_connection
 # Global variable to store memoized heuristic values
 memoized_heuristics = {}
 
@@ -59,7 +59,16 @@ class State:
         AStar_evaluation = heuristic + self.cost
         memoized_heuristics[self.state_tuple] = AStar_evaluation
         return AStar_evaluation
-
+    
+    def disjoint_pattern_database(self,conn):
+        if self.state_tuple in memoized_heuristics:
+            return memoized_heuristics[self.state_tuple]
+        heuristic= select_heuristic_by_state(conn, self.state)
+        
+        AStar_evaluation = heuristic + self.cost
+        memoized_heuristics[self.state_tuple] = AStar_evaluation
+        return AStar_evaluation
+    
     def expand(self):
         x = self.state.index(0)
         moves = self.valid_moves  # Use the precalculated valid moves
@@ -107,7 +116,10 @@ class State:
 
         return valid_moves
 
-def a_star_search(given_state, n, verbose=False, getTime=False):
+
+def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
+    # Create a connection to the database
+    conn=create_connection()
     # Start measuring the time
     start_time = time()
     frontier = PriorityQueue()
@@ -122,7 +134,10 @@ def a_star_search(given_state, n, verbose=False, getTime=False):
     if root.has_letters():
         evaluation = root.manhattan_modified()
     else:
-        evaluation = root.manhattan_distance()
+        if heuristic == 'd':
+            evaluation = root.disjoint_pattern_database(conn)
+        elif heuristic == 'm':
+            evaluation = root.manhattan_distance()
     
     frontier.put((evaluation, counter, root))
 
@@ -166,7 +181,7 @@ def number_of_moves(input_list,n):
         result.append(pattern)
     for pattern in patterns:
         print('/n solving: ',pattern)
-        a_star_solution = a_star_search(pattern, n, verbose=False)
+        a_star_solution = a_star_search(pattern, n, verbose=False,heuristic='m')
         number_of_moves = len(a_star_solution[0])
         print('/n cost: ',number_of_moves)
         result.append(number_of_moves)
