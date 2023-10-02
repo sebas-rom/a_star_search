@@ -422,10 +422,10 @@ def number_of_moves(input_list,n):
     for pattern in patterns:
         result.append(pattern)
     for pattern in patterns:
-        print('/n solving: ',pattern)
+        #print('\n solving: ',pattern)
         a_star_solution = a_star_search(pattern, n, verbose=False,heuristic='m')
         number_of_moves = len(a_star_solution[0])
-        print('/n cost: ',number_of_moves)
+        #print('\n cost: ',number_of_moves)
         result.append(number_of_moves)
         cost += number_of_moves
     result.append(cost)
@@ -440,6 +440,10 @@ def number_of_moves(input_list,n):
 
 # Example input_list
 # input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
+# result = number_of_moves(input_list,n=3)
+# print(result)
+
+# input_list = [1, 8, 2, 0, 4, 3, 7, 5, 6]
 # result = number_of_moves(input_list,n=3)
 # print(result)
 

@@ -5,10 +5,10 @@ import os
 
 def create_database():
     # Check if the database file exists and delete it if it does
-    if os.path.exists('puzzle_database.db'):
-        os.remove('puzzle_database.db')
+    if os.path.exists('puzzle_database_3x3.db'):
+        os.remove('puzzle_database_3x3.db')
 
-    conn = sqlite3.connect('puzzle_database.db')
+    conn = sqlite3.connect('puzzle_database_3x3.db')
     cursor = conn.cursor()
 
     # Create a table to store puzzle objects
@@ -31,7 +31,7 @@ def generate_and_check_puzzles():
     n = 3
     goal_state = [1, 2, 3, 4, 5, 6, 7, 8, 0]
 
-    conn = sqlite3.connect('puzzle_database.db')
+    conn = sqlite3.connect('puzzle_database_3x3.db')
     cursor = conn.cursor()
 
     all_puzzles = list(permutations(goal_state))

@@ -5,10 +5,10 @@ import os
 
 def create_database():
     # Check if the database file exists and delete it if it does
-    if os.path.exists('puzzle_database_4X4.db'):
-        os.remove('puzzle_database_4X4.db')
+    if os.path.exists('puzzle_database_4x4.db'):
+        os.remove('puzzle_database_4x4.db')
 
-    conn = sqlite3.connect('puzzle_database_4X4.db')
+    conn = sqlite3.connect('puzzle_database_4x4.db')
     cursor = conn.cursor()
 
     # Create a table to store puzzle objects
@@ -35,7 +35,7 @@ def generate_and_check_puzzles():
     print("Generating puzzles...")
     goal_state = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]
 
-    conn = sqlite3.connect('puzzle_database_4X4.db')
+    conn = sqlite3.connect('puzzle_database_4x4.db')
     cursor = conn.cursor()
     print("Connected to database...")
 
