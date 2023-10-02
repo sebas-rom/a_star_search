@@ -1,14 +1,25 @@
 from queue import PriorityQueue
 from time import time
 from conection_database import select_heuristic_by_state, create_connection
+
 # Global variable to store memoized heuristic values
 memoized_heuristics = {}
 
-#revisited
 class State:
     DIRECTIONS = ['←', '→', '↑', '↓']
 
     def __init__(self, state, parent, direction, depth, cost, goal, n):
+        """
+        Initialize a state with relevant information.
+        Args:
+            state (list): The current state of the puzzle.
+            parent (State): The parent state.
+            direction (str): The direction to reach this state.
+            depth (int): The depth of this state in the search tree.
+            cost (int): The cost to reach this state.
+            goal (list): The goal state of the puzzle.
+            n (int): The size of the puzzle (n x n).
+        """
         self.state = state
         self.parent = parent
         self.direction = direction
@@ -24,15 +35,30 @@ class State:
             self.cost = cost
 
     def has_letters(self):
+        """
+        Check if the puzzle state contains letters (for modified Manhattan distance heuristic).
+        Returns:
+            bool: True if letters are present, False otherwise.
+        """
         for item in self.state:
             if isinstance(item, str) and item.isalpha():
                 return True
         return False
 
     def is_goal(self):
+        """
+        Check if the current state is the goal state.
+        Returns:
+            bool: True if it's the goal state, False otherwise.
+        """
         return self.state == self.goal
 
     def manhattan_distance(self):
+        """
+        Calculate the Manhattan distance heuristic for the current state.
+        Returns:
+            int: The heuristic value.
+        """
         if self.state_tuple in memoized_heuristics:
             return memoized_heuristics[self.state_tuple]
 
@@ -47,6 +73,11 @@ class State:
         return a_star_evaluation
 
     def manhattan_modified(self):
+        """
+        Calculate the Manhattan distance heuristic for the current state, ignoring 'a' positions.
+        Returns:
+            int: The heuristic value.
+        """
         if self.state_tuple in memoized_heuristics:
             return memoized_heuristics[self.state_tuple]
 
@@ -61,6 +92,13 @@ class State:
         return AStar_evaluation
     
     def disjoint_pattern_database(self,conn):
+        """
+        Calculate the heuristic value for the current puzzle state using a disjoint pattern database.
+        Args:
+            conn: A database connection for accessing pattern databases.
+        Returns:
+            int: The heuristic value.
+        """
         if self.state_tuple in memoized_heuristics:
             return memoized_heuristics[self.state_tuple]
         heuristic= select_heuristic_by_state(conn, self.state)
@@ -70,6 +108,11 @@ class State:
         return AStar_evaluation
     
     def expand(self):
+        """
+        Generate child states by applying valid moves to the current puzzle state.
+        Returns:
+            list: A list of child states.
+        """
         x = self.state.index(0)
         moves = self.valid_moves  # Use the precalculated valid moves
         children = []
@@ -91,6 +134,11 @@ class State:
         return children
 
     def solution(self):
+        """
+        Construct and return the sequence of moves (solution) from the initial state to the current state.
+        Returns:
+            list: A list of move directions (e.g., ['↑', '→', '↓']).
+        """
         solution = []
         solution.append(self.direction)
         path = self
@@ -102,6 +150,11 @@ class State:
         return solution
 
     def calculate_valid_moves(self):
+        """
+        Calculate and return a list of valid moves (directions) that can be applied to the current state.
+        Returns:
+            list: A list of valid moves (e.g., ['←', '↑', '↓']).
+        """
         x = self.state.index(0)
         valid_moves = State.DIRECTIONS.copy()
 
@@ -116,10 +169,18 @@ class State:
 
         return valid_moves
 
-
 def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
-    # Create a connection to the database
-    conn=create_connection()
+    """
+    Perform A* search to solve the sliding puzzle.
+    Args:
+        given_state (list): The initial state of the puzzle.
+        n (int): The size of the puzzle (n x n).
+        verbose (bool): Whether to print the solution.
+        getTime (bool): Whether to measure and print the time taken.
+        heuristic (str): The heuristic to use ('m' for Manhattan, 'd' for disjoint pattern database).
+    Returns:
+        tuple: A tuple containing the solution and the number of explored states.
+    """
     # Start measuring the time
     start_time = time()
     frontier = PriorityQueue()
@@ -135,6 +196,8 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
         evaluation = root.manhattan_modified()
     else:
         if heuristic == 'd':
+             # Create a connection to the database
+            conn=create_connection()
             evaluation = root.disjoint_pattern_database(conn)
         elif heuristic == 'm':
             evaluation = root.manhattan_distance()
@@ -173,24 +236,90 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
     print(f"No solution found. Time taken: {elapsed_time} seconds")
     return None
 
-def number_of_moves(input_list,n):
-    result = [] 
-    cost = 0
-    patterns = create_patterns(input_list,n)
-    for pattern in patterns:
-        result.append(pattern)
-    for pattern in patterns:
-        print('/n solving: ',pattern)
-        a_star_solution = a_star_search(pattern, n, verbose=False,heuristic='m')
-        number_of_moves = len(a_star_solution[0])
-        print('/n cost: ',number_of_moves)
-        result.append(number_of_moves)
-        cost += number_of_moves
-    result.append(cost)
-    return result  #########
+def print_state(state, n):
+    """
+    Print the puzzle state as a board.
+    Args:
+        state (list): The current state of the puzzle.
+        n (int): The size of the puzzle (n x n).
+    """
+    max_width = len(str(n * n - 1))  # Determine the maximum width for elements
+    for i in range(n):
+        row = state[i * n:(i + 1) * n]
+        formatted_row = [f"{item:>{max_width}}" if item != 0 else " " * max_width for item in row]
+        print(" | ".join(formatted_row))
+        if i < n - 1:
+            print("-" * (n * (max_width + 3) - 1))  # Separator between rows
+    print("\n")
+
+def print_board_solution(root, solution):
+    """
+    Prints the puzzle solution as the moves in the board.
+    Args:
+        root (list): The initial state of the puzzle.
+        solution (list): The solution path.
+    """
+    n = int(len(root) ** 0.5)
+    current_state = root.copy()
+
+    print("initial:")
+    print_state(current_state, n)
+
+    for move in solution:
+        if move == '←':  # Left
+            x = current_state.index(0)
+            current_state[x], current_state[x - 1] = current_state[x - 1], current_state[x]
+        elif move == '→':  # Right
+            x = current_state.index(0)
+            current_state[x], current_state[x + 1] = current_state[x + 1], current_state[x]
+        elif move == '↑':  # Up
+            x = current_state.index(0)
+            current_state[x], current_state[x - n] = current_state[x - n], current_state[x]
+        elif move == '↓':  # Down
+            x = current_state.index(0)
+            current_state[x], current_state[x + n] = current_state[x + n], current_state[x]
+
+        print(move + ":")
+        print_state(current_state, n)
+
+def inv_num(puzzle):
+    """
+    Calculate the inversion number of the puzzle.
+    Args:
+        puzzle (list): The puzzle state.
+    Returns:
+        int: The inversion number.
+    """
+    inv = 0
+    for i in range(len(puzzle) - 1):
+        for j in range(i + 1, len(puzzle)):
+            if puzzle[i] > puzzle[j] and puzzle[i] and puzzle[j]:
+                inv += 1
+    return inv
+
+def solvable(puzzle):
+    """
+    Check if the puzzle is solvable based on the inversion number.
+    Args:
+        puzzle (list): The puzzle state.
+    Returns:
+        bool: True if solvable, False otherwise.
+    """
+    inv_counter = inv_num(puzzle)
+    return inv_counter % 2 == 0
 
 
+
+#The following functions were used to populate the disjoint database
 def create_patterns(input_list,n):
+    """
+    Create patterns for the for the input list based on puzzle size.
+    Args:
+        input_list (list): The input puzzle state.
+        n (int): The size of the puzzle (n x n).
+    Returns:
+        tuple: A tuple containing patterns.
+    """
     if n == 3:
         pattern1 = []
         pattern2 = []
@@ -231,14 +360,19 @@ def create_patterns(input_list,n):
                 pattern1.append('a')
                 pattern2.append('a')
                 pattern3.append(num)
-        # print(pattern1,'\n')
-        # print(pattern2,'\n')
-        # print(pattern3,'\n')
         return pattern1, pattern2, pattern3
     else:
         return None
 
 def determine_goal_state(pattern,n):
+    """
+    Determine the goal state based on the input pattern and puzzle size.
+    Args:
+        pattern (list): The input pattern.
+        n (int): The size of the puzzle (n x n).
+    Returns:
+        list: The goal state.
+    """
     if n ==3:
         GOAL_STATE_1 = [1, 2, 3, 4, 'a', 'a', 'a', 'a', 0]
         GOAL_STATE_2 = ['a', 'a', 'a', 'a', 5, 6, 7, 8, 0]
@@ -273,63 +407,41 @@ def determine_goal_state(pattern,n):
         else:
             return "Pattern does not match any goal state"
 
+def number_of_moves(input_list,n):
+    """
+    Calculate the number of moves needed to solve a sliding puzzle for various patterns.
+    Args:
+        input_list (list): The initial state of the puzzle.
+        n (int): The size of the puzzle (n x n).
+    Returns:
+        list: A list containing information about patterns and the total number of moves.
+    """
+    result = [] 
+    cost = 0
+    patterns = create_patterns(input_list,n)
+    for pattern in patterns:
+        result.append(pattern)
+    for pattern in patterns:
+        print('/n solving: ',pattern)
+        a_star_solution = a_star_search(pattern, n, verbose=False,heuristic='m')
+        number_of_moves = len(a_star_solution[0])
+        print('/n cost: ',number_of_moves)
+        result.append(number_of_moves)
+        cost += number_of_moves
+    result.append(cost)
+    return result  
 
 
 
-#functional
-def print_state(state, n):
-    max_width = len(str(n * n - 1))  # Determine the maximum width for elements
-    for i in range(n):
-        row = state[i * n:(i + 1) * n]
-        formatted_row = [f"{item:>{max_width}}" if item != 0 else " " * max_width for item in row]
-        print(" | ".join(formatted_row))
-        if i < n - 1:
-            print("-" * (n * (max_width + 3) - 1))  # Separator between rows
-    print("\n")
 
-def print_board_solution(root, solution):
-    n = int(len(root) ** 0.5)
-    current_state = root.copy()
 
-    print("initial:")
-    print_state(current_state, n)
 
-    for move in solution:
-        if move == '←':  # Left
-            x = current_state.index(0)
-            current_state[x], current_state[x - 1] = current_state[x - 1], current_state[x]
-        elif move == '→':  # Right
-            x = current_state.index(0)
-            current_state[x], current_state[x + 1] = current_state[x + 1], current_state[x]
-        elif move == '↑':  # Up
-            x = current_state.index(0)
-            current_state[x], current_state[x - n] = current_state[x - n], current_state[x]
-        elif move == '↓':  # Down
-            x = current_state.index(0)
-            current_state[x], current_state[x + n] = current_state[x + n], current_state[x]
-
-        print(move + ":")
-        print_state(current_state, n)
-
-def inv_num(puzzle):
-    inv = 0
-    for i in range(len(puzzle) - 1):
-        for j in range(i + 1, len(puzzle)):
-            if puzzle[i] > puzzle[j] and puzzle[i] and puzzle[j]:
-                inv += 1
-    return inv
-
-def solvable(puzzle):
-    inv_counter = inv_num(puzzle)
-    return inv_counter % 2 == 0
-
+##Some examples for testing:
 
 # Example input_list
 # input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
 # result = number_of_moves(input_list,n=3)
 # print(result)
-
-
 
 
 # root2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]

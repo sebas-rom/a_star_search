@@ -6,22 +6,21 @@ from conection_database import create_connection
 n = 3
 print("Enter your" ,n,"*",n, "puzzle")
 root = []
-#1,8,2,0,4,3,7,6,5]
+#1,8,2,0,4,3,7,6,5
 num= input()
 for x in str(num):
   root.append(int(x))
   
-conn=create_connection()
 print("The given state is:", root)
 
 if solvable(root):
     print("Solvable, please wait.\n")
 
-    a_star_solution_manhattan = a_star_search(root, n=3, verbose=False, getTime=True,heuristic='m')  # Enable verbose output
+    a_star_solution_manhattan = a_star_search(root, n=3, verbose=False, getTime=True,heuristic='m')  
     print('A* Solution is with Manhattan is ', a_star_solution_manhattan[0])
     print('Number of explored nodes is ', a_star_solution_manhattan[1], '\n')
     
-    a_star_solution_disjoint = a_star_search(root, n=3, verbose=False, getTime=True,heuristic='d')  # Enable verbose output
+    a_star_solution_disjoint = a_star_search(root, n=3, verbose=False, getTime=True,heuristic='d')
     print('A* Solution is with Disjoint is ', a_star_solution_disjoint[0])
     print('Number of explored nodes is ', a_star_solution_disjoint[1])
 else:
