@@ -1,3 +1,6 @@
+# This is a faster implementation of populateDB.py using multithreading.
+# It only supports 3x3 puzzles for now.
+
 import sqlite3
 import time
 from astar import number_of_moves
@@ -37,13 +40,13 @@ def list_to_text_state(state_list):
         return None
 
 def process_state(state_tuple):
-    conn = sqlite3.connect('puzzle_database.db', check_same_thread=False)
+    conn = sqlite3.connect('puzzle_database_3x3.db', check_same_thread=False)
     cursor = conn.cursor()
 
     state = state_tuple[0]
     state_list = text_state_to_list(state)
 
-    response = number_of_moves(state_list)
+    response = number_of_moves(state_list,n=3)
 
     sub_state_1 = list_to_text_state(response[0])
     sub_state_2 = list_to_text_state(response[1])
@@ -72,7 +75,7 @@ def visit_unvisited_states(num_threads=get_available_threads()):
 
     start_time = time.time()  # Record the start time
     print("Using {} threads.".format(num_threads))
-    conn = sqlite3.connect('puzzle_database.db', check_same_thread=False)
+    conn = sqlite3.connect('puzzle_database_3x3.db', check_same_thread=False)
     cursor = conn.cursor()
 
     # Select all entries where visited is 0 and cost_total is null
