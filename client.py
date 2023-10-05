@@ -6,7 +6,7 @@ from conection_database import create_connection
 n = 3
 print("Enter your" ,n,"*",n, "puzzle")
 # root = [1,8,2,0,4,3,7,6,5]
-root = [3,7,1,5,4,2,6,8,0]
+root = [0,8,7,6,5,4,3,2,1]
 #
 # num= input()
 # for x in str(num):
@@ -17,12 +17,12 @@ print("The given state is:", root)
 if solvable(root):
     print("Solvable, please wait.\n")
 
-    a_star_solution_manhattan = a_star_search(root, n=3, verbose=False, getTime=True,heuristic='m')  
+    a_star_solution_manhattan = a_star_search(root, n=3, verbose=True, getTime=True,heuristic='m',mem_heuristics=False)  
     print('A* Solution is with Manhattan is ', a_star_solution_manhattan[0])
     print('Number of explored nodes is ', a_star_solution_manhattan[1])
     # print('Number of frontier nodes is ', a_star_solution_manhattan[2], '\n')   
     
-    a_star_solution_disjoint = a_star_search(root, n=3, verbose=False, getTime=True,heuristic='d')
+    a_star_solution_disjoint = a_star_search(root, n=3, verbose=False, getTime=True,heuristic='d',mem_heuristics=False)  # Enable verbose output
     print('A* Solution is with Disjoint is ', a_star_solution_disjoint[0])
     print('Number of explored nodes is ', a_star_solution_disjoint[1])
     # print('Number of frontier nodes is ', a_star_solution_disjoint[2], '\n')

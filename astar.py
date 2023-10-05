@@ -53,13 +53,13 @@ class State:
         """
         return self.state == self.goal
 
-    def manhattan_distance(self):
+    def manhattan_distance(self,mem_heuristics=False):
         """
         Calculate the Manhattan distance heuristic for the current state.
         Returns:
             int: The heuristic value.
         """
-        if self.state_tuple in memoized_heuristics:
+        if self.state_tuple in memoized_heuristics and mem_heuristics:
             return memoized_heuristics[self.state_tuple]
 
         heuristic = 0
@@ -72,13 +72,13 @@ class State:
         memoized_heuristics[self.state_tuple] = a_star_evaluation  # Memoize the heuristic value
         return a_star_evaluation
 
-    def manhattan_modified(self):
+    def manhattan_modified(self, mem_heuristics=True):
         """
         Calculate the Manhattan distance heuristic for the current state, ignoring 'a' positions.
         Returns:
             int: The heuristic value.
         """
-        if self.state_tuple in memoized_heuristics:
+        if self.state_tuple in memoized_heuristics and mem_heuristics:
             return memoized_heuristics[self.state_tuple]
 
         heuristic = 0
@@ -91,7 +91,7 @@ class State:
         memoized_heuristics[self.state_tuple] = AStar_evaluation
         return AStar_evaluation
     
-    def disjoint_pattern_database(self,conn):
+    def disjoint_pattern_database(self,conn, mem_heuristics=False):
         """
         Calculate the heuristic value for the current puzzle state using a disjoint pattern database.
         Args:
@@ -99,7 +99,7 @@ class State:
         Returns:
             int: The heuristic value.
         """
-        if self.state_tuple in memoized_heuristics:
+        if self.state_tuple in memoized_heuristics and mem_heuristics:
             return memoized_heuristics[self.state_tuple]
         heuristic= select_heuristic_by_state(conn, self.state)
         
@@ -169,7 +169,7 @@ class State:
 
         return valid_moves
 
-def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
+def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m',mem_heuristics=False):
     """
     Perform A* search to solve the sliding puzzle.
     Args:
@@ -178,9 +178,11 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
         verbose (bool): Whether to print the solution.
         getTime (bool): Whether to measure and print the time taken.
         heuristic (str): The heuristic to use ('m' for Manhattan, 'd' for disjoint pattern database).
+        mem_heuristics (bool): Whether to use memoized heuristics. True for modified Manhattan, False for Manhattan and disjoint pattern database.
     Returns:
         tuple: A tuple containing the solution and the number of explored states.
     """
+    
     # Start measuring the time
     start_time = time()
     frontier = PriorityQueue()
@@ -193,14 +195,18 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
     explored.add(tuple(root.state))
     
     if root.has_letters():
-        evaluation = root.manhattan_modified()
+        mem_heuristics = True
+        evaluation = root.manhattan_modified(mem_heuristics)
     else:
+        mem_heuristics= False
         if heuristic == 'd':
              # Create a connection to the database
             conn=create_connection()
-            evaluation = root.disjoint_pattern_database(conn)
+            evaluation = root.disjoint_pattern_database(conn,mem_heuristics)
+            
         elif heuristic == 'm':
-            evaluation = root.manhattan_distance()
+            
+            evaluation = root.manhattan_distance(mem_heuristics)
     
     frontier.put((evaluation, counter, root))
 
@@ -225,15 +231,24 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
                 return child.solution(), len(explored)
 
             child_tuple = tuple(child.state)
+            
             if child_tuple not in explored:
                 counter += 1
+                
                 if child.has_letters():
-                    evaluation = child.manhattan_modified()
+                    mem_heuristics = True
+                    evaluation = child.manhattan_modified(mem_heuristics)
+                    
                 elif heuristic == 'd':
-                    evaluation = child.disjoint_pattern_database(conn)
+                    mem_heuristics = False
+                    evaluation = child.disjoint_pattern_database(conn, mem_heuristics)
+                    
                 elif heuristic == 'm':
-                    evaluation = child.manhattan_distance()    
+                    mem_heuristics = False
+                    evaluation = child.manhattan_distance(mem_heuristics)   
+                     
                 frontier.put((evaluation, counter, child))
+                
         explored.add(tuple(current_node.state))  # Convert the list to a tuple and add to explored set
 
     # Calculate the time taken if no solution is found
