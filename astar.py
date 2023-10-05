@@ -4,7 +4,7 @@ from conection_database import select_heuristic_by_state, create_connection
 
 # Global variable to store memoized heuristic values
 memoized_heuristics = {}
-
+memorized_patterns = []
 class State:
     DIRECTIONS = ['←', '→', '↑', '↓']
 
@@ -68,8 +68,8 @@ class State:
             heuristic = heuristic + distance // self.n + distance % self.n
 
         a_star_evaluation = heuristic + self.cost
-
         memoized_heuristics[self.state_tuple] = a_star_evaluation  # Memoize the heuristic value
+        
         return a_star_evaluation
 
     def manhattan_modified(self):
@@ -89,6 +89,7 @@ class State:
 
         AStar_evaluation = heuristic + self.cost
         memoized_heuristics[self.state_tuple] = AStar_evaluation
+        
         return AStar_evaluation
     
     def disjoint_pattern_database(self,conn):
@@ -101,10 +102,11 @@ class State:
         """
         if self.state_tuple in memoized_heuristics:
             return memoized_heuristics[self.state_tuple]
-        heuristic= select_heuristic_by_state(conn, self.state)
         
+        heuristic= select_heuristic_by_state(conn, self.state)
         AStar_evaluation = heuristic + self.cost
         memoized_heuristics[self.state_tuple] = AStar_evaluation
+        
         return AStar_evaluation
     
     def expand(self):
@@ -219,7 +221,12 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
                 print(f"Time taken: {elapsed_time} seconds")
             return current_node.solution(), len(explored)
 
-        children = current_node.expand()
+        if current_node  not in memorized_patterns:
+            children = current_node.expand()
+            memorized_patterns.append(current_node)
+        else :
+            continue
+        
         for child in children:
             child_tuple = tuple(child.state)
             if child_tuple not in explored:
