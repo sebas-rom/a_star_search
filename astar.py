@@ -188,7 +188,7 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
     counter = 0
     goal = determine_goal_state(given_state, n)
     root = State(given_state, None, None, 0, 0, goal, n)
-    
+    conn= None
     # Convert the root state to a tuple for use in explored set
     explored.add(tuple(root.state))
     
@@ -213,6 +213,8 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
         children = current_node.expand()
         for child in children:
             if child.is_goal():
+                if heuristic=='d':
+                    conn.close()
                 if verbose:
                     print_board_solution(given_state, child.solution())
                 # Calculate the time taken for this run
@@ -227,8 +229,10 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
                 counter += 1
                 if child.has_letters():
                     evaluation = child.manhattan_modified()
-                else:
-                    evaluation = child.manhattan_distance()
+                elif heuristic == 'd':
+                    evaluation = child.disjoint_pattern_database(conn)
+                elif heuristic == 'm':
+                    evaluation = child.manhattan_distance()    
                 frontier.put((evaluation, counter, child))
         explored.add(tuple(current_node.state))  # Convert the list to a tuple and add to explored set
 

@@ -5,11 +5,12 @@ from conection_database import create_connection
 
 n = 3
 print("Enter your" ,n,"*",n, "puzzle")
-root = []
-#1,8,2,0,4,3,7,6,5
-num= input()
-for x in str(num):
-  root.append(int(x))
+# root = [1,8,2,0,4,3,7,6,5]
+root = [3,7,1,5,4,2,6,8,0]
+#
+# num= input()
+# for x in str(num):
+#   root.append(int(x))
   
 print("The given state is:", root)
 
@@ -18,11 +19,13 @@ if solvable(root):
 
     a_star_solution_manhattan = a_star_search(root, n=3, verbose=False, getTime=True,heuristic='m')  
     print('A* Solution is with Manhattan is ', a_star_solution_manhattan[0])
-    print('Number of explored nodes is ', a_star_solution_manhattan[1], '\n')
+    print('Number of explored nodes is ', a_star_solution_manhattan[1])
+    # print('Number of frontier nodes is ', a_star_solution_manhattan[2], '\n')   
     
     a_star_solution_disjoint = a_star_search(root, n=3, verbose=False, getTime=True,heuristic='d')
     print('A* Solution is with Disjoint is ', a_star_solution_disjoint[0])
     print('Number of explored nodes is ', a_star_solution_disjoint[1])
+    # print('Number of frontier nodes is ', a_star_solution_disjoint[2], '\n')
 else:
     print("Not solvable")
 
