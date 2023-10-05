@@ -4,7 +4,7 @@ from conection_database import select_heuristic_by_state, create_connection
 
 # Global variable to store memoized heuristic values
 memoized_heuristics = {}
-memorized_patterns = []
+
 class State:
     DIRECTIONS = ['←', '→', '↑', '↓']
 
@@ -68,8 +68,8 @@ class State:
             heuristic = heuristic + distance // self.n + distance % self.n
 
         a_star_evaluation = heuristic + self.cost
+
         memoized_heuristics[self.state_tuple] = a_star_evaluation  # Memoize the heuristic value
-        
         return a_star_evaluation
 
     def manhattan_modified(self):
@@ -89,7 +89,6 @@ class State:
 
         AStar_evaluation = heuristic + self.cost
         memoized_heuristics[self.state_tuple] = AStar_evaluation
-        
         return AStar_evaluation
     
     def disjoint_pattern_database(self,conn):
@@ -102,11 +101,10 @@ class State:
         """
         if self.state_tuple in memoized_heuristics:
             return memoized_heuristics[self.state_tuple]
-        
         heuristic= select_heuristic_by_state(conn, self.state)
+        
         AStar_evaluation = heuristic + self.cost
         memoized_heuristics[self.state_tuple] = AStar_evaluation
-        
         return AStar_evaluation
     
     def expand(self):
@@ -209,25 +207,21 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
     while not frontier.empty():
         current_node = frontier.get()
         current_node = current_node[2]
-        explored.add(tuple(current_node.state))  # Convert the list to a tuple and add to explored set
-
-        if current_node.is_goal():
-            if verbose:
-                print_board_solution(given_state, current_node.solution())
-            # Calculate the time taken for this run
-            end_time = time()
-            elapsed_time = end_time - start_time
-            if getTime:
-                print(f"Time taken: {elapsed_time} seconds")
-            return current_node.solution(), len(explored)
-
-        if current_node  not in memorized_patterns:
-            children = current_node.expand()
-            memorized_patterns.append(current_node)
-        else :
-            continue
         
+
+        
+        children = current_node.expand()
         for child in children:
+            if child.is_goal():
+                if verbose:
+                    print_board_solution(given_state, child.solution())
+                # Calculate the time taken for this run
+                end_time = time()
+                elapsed_time = end_time - start_time
+                if getTime:
+                    print(f"Time taken: {elapsed_time} seconds")
+                return child.solution(), len(explored)
+
             child_tuple = tuple(child.state)
             if child_tuple not in explored:
                 counter += 1
@@ -236,6 +230,7 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m'):
                 else:
                     evaluation = child.manhattan_distance()
                 frontier.put((evaluation, counter, child))
+        explored.add(tuple(current_node.state))  # Convert the list to a tuple and add to explored set
 
     # Calculate the time taken if no solution is found
     end_time = time()
