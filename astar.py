@@ -218,10 +218,11 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m',mem
     while not frontier.empty():
         current_node = frontier.get()
         current_node = current_node[2]
-
-        
+        explored.add(tuple(current_node.state))  # Convert the list to a tuple and add to explored set
         children = current_node.expand()
+        
         for child in children:
+            counter += 1
             if child.is_goal():
                 if heuristic=='d':
                     conn.close()
@@ -237,8 +238,6 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m',mem
             child_tuple = tuple(child.state)
             
             if child_tuple not in explored:
-                counter += 1
-                
                 if child.has_letters():
                     mem_heuristics = True
                     evaluation = child.manhattan_modified(mem_heuristics)
@@ -253,7 +252,7 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m',mem
                      
                 frontier.put((evaluation, counter, child))
                 
-        explored.add(tuple(current_node.state))  # Convert the list to a tuple and add to explored set
+        
 
     # Calculate the time taken if no solution is found
     end_time = time()
@@ -447,10 +446,10 @@ def number_of_moves(input_list,n):
     for pattern in patterns:
         result.append(pattern)
     for pattern in patterns:
-        print('\n solving: ',pattern)
+        # print('\n solving: ',pattern)
         goal = determine_goal_state(pattern, n)
         root = State(pattern, None, None, 0, 0, goal, n)
-        number_of_moves = root.manhattan_modified(True)
+        number_of_moves = root.manhattan_modified()
         result.append(number_of_moves)
         cost += number_of_moves
     result.append(cost)
@@ -467,12 +466,9 @@ def number_of_moves(input_list,n):
 input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
 result = number_of_moves(input_list,n=3)
 print(result)
-
-# input_list = [1, 8, 2, 0, 4, 3, 7, 5, 6]
-# result = number_of_moves(input_list,n=3)
-# print(result)
-
-
+root = [0,8,7,6,5,4,3,2,1]
+result = number_of_moves(root,n=3)
+print(result)
 # root2 = [1,2,3,4,5,6,7,0,10,13,8,9,14,12,15,11]
 
 # print("\n \n The given state is:", root2)
