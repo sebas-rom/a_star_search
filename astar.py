@@ -78,18 +78,34 @@ class State:
         Returns:
             int: The heuristic value.
         """
+        # if self.state_tuple in memoized_heuristics and mem_heuristics:
+        #     return memoized_heuristics[self.state_tuple]
+
+        # heuristic = 0
+        # for i in range(1, self.n * self.n):
+        #     if i != 'a':
+        #         distance = abs(i - (i - 1) // self.n) + abs((i - 1) % self.n - (i - 1) // self.n)
+        #         heuristic += distance
+
+        # AStar_evaluation = heuristic + self.cost
+        # memoized_heuristics[self.state_tuple] = AStar_evaluation
+        # return AStar_evaluation
         if self.state_tuple in memoized_heuristics and mem_heuristics:
             return memoized_heuristics[self.state_tuple]
 
         heuristic = 0
+        # print(self.state_tuple)
         for i in range(1, self.n * self.n):
-            if i != 'a':
-                distance = abs(i - (i - 1) // self.n) + abs((i - 1) % self.n - (i - 1) // self.n)
-                heuristic += distance
+            if i in self.goal:
+                distance = abs(self.state_tuple.index(i) - self.goal.index(i))
+                # print(i,":",self.state_tuple.index(i),": ",self.goal.index(i),":",distance)
+                heuristic = heuristic + distance // self.n + distance % self.n
+                # print("heuristic: ",heuristic)
 
-        AStar_evaluation = heuristic + self.cost
-        memoized_heuristics[self.state_tuple] = AStar_evaluation
-        return AStar_evaluation
+        a_star_evaluation = heuristic + self.cost
+        # print("a_star_evaluation: ",a_star_evaluation)
+        memoized_heuristics[self.state_tuple] = a_star_evaluation  # Memoize the heuristic value
+        return a_star_evaluation
     
     def disjoint_pattern_database(self,conn, mem_heuristics=False):
         """
@@ -194,7 +210,7 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m',mem
     # Convert the root state to a tuple for use in explored set
     explored.add(tuple(root.state))
     
-    if root.has_letters():
+    if heuristic == 'modified':
         mem_heuristics = True
         evaluation = root.manhattan_modified(mem_heuristics)
     else:
@@ -213,8 +229,6 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m',mem
     while not frontier.empty():
         current_node = frontier.get()
         current_node = current_node[2]
-        
-
         
         children = current_node.expand()
         for child in children:
@@ -235,9 +249,10 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m',mem
             if child_tuple not in explored:
                 counter += 1
                 
-                if child.has_letters():
+                if heuristic == 'modified':
                     mem_heuristics = True
                     evaluation = child.manhattan_modified(mem_heuristics)
+                    print(child_tuple,': ',evaluation)
                     
                 elif heuristic == 'd':
                     mem_heuristics = False
@@ -246,7 +261,8 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m',mem
                 elif heuristic == 'm':
                     mem_heuristics = False
                     evaluation = child.manhattan_distance(mem_heuristics)   
-                     
+
+                # print(evaluation,": ",child_tuple) 
                 frontier.put((evaluation, counter, child))
                 
         explored.add(tuple(current_node.state))  # Convert the list to a tuple and add to explored set
@@ -351,13 +367,13 @@ def create_patterns(input_list,n):
                 pattern2.append(num)
             elif 1 <= num <= 4:
                 pattern1.append(num)
-                pattern2.append('a')
+                pattern2.append(0)
             elif 5 <= num <= 8:
-                pattern1.append('a')
+                pattern1.append(0)
                 pattern2.append(num)
             else:
-                pattern1.append('a')
-                pattern2.append('a')
+                pattern1.append(0)
+                pattern2.append(0)
 
         return pattern1, pattern2
     if n ==4:
@@ -395,8 +411,8 @@ def determine_goal_state(pattern,n):
         list: The goal state.
     """
     if n ==3:
-        GOAL_STATE_1 = [1, 2, 3, 4, 'a', 'a', 'a', 'a', 0]
-        GOAL_STATE_2 = ['a', 'a', 'a', 'a', 5, 6, 7, 8, 0]
+        GOAL_STATE_1 = [1, 2, 3, 4, 0, 0, 0, 0, 0]
+        GOAL_STATE_2 = [0, 0, 0, 0, 5, 6, 7, 8, 0]
         GOAL_STATE_COMPLETE = [1, 2, 3, 4, 5, 6, 7, 8, 0]
 
         if set(pattern) == set(GOAL_STATE_1):
@@ -443,10 +459,10 @@ def number_of_moves(input_list,n):
     for pattern in patterns:
         result.append(pattern)
     for pattern in patterns:
-        #print('\n solving: ',pattern)
-        a_star_solution = a_star_search(pattern, n, verbose=False,heuristic='m')
-        number_of_moves = len(a_star_solution[0])
-        #print('\n cost: ',number_of_moves)
+        print('\n solving: ',pattern)
+        goal = determine_goal_state(pattern, n)
+        root = State(pattern, None, None, 0, 0, goal, n)
+        number_of_moves = root.manhattan_modified(True)
         result.append(number_of_moves)
         cost += number_of_moves
     result.append(cost)
@@ -463,6 +479,11 @@ def number_of_moves(input_list,n):
 # input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
 # result = number_of_moves(input_list,n=3)
 # print(result)
+
+input_list = [0, 1, 2, 3, 4, 8, 7, 6, 5]
+result = number_of_moves(input_list,n=3)
+print(result)
+
 
 # input_list = [1, 8, 2, 0, 4, 3, 7, 5, 6]
 # result = number_of_moves(input_list,n=3)

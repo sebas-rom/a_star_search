@@ -31,6 +31,7 @@ def select_heuristic_by_state(conn, state):
     cur.execute("SELECT cost_total FROM puzzles WHERE state=?", (text_state,))
     rows = cur.fetchall()
     cost=rows[0][0]
+    # print(text_state,": ",cost)
     return cost
         
 # def main():
