@@ -83,13 +83,18 @@ class State:
 
         heuristic = 0
         for i in range(1, self.n * self.n):
-            if i != 'a':
-                distance = abs(i - (i - 1) // self.n) + abs((i - 1) % self.n - (i - 1) // self.n)
+            if i in self.state_tuple and i in self.goal:
+                state_index = self.state_tuple.index(i)
+                goal_index = self.goal.index(i)
+                state_x, state_y = state_index % self.n, state_index // self.n
+                goal_x, goal_y = goal_index % self.n, goal_index // self.n
+                distance = abs(state_x - goal_x) + abs(state_y - goal_y)
                 heuristic += distance
 
-        AStar_evaluation = heuristic + self.cost
-        memoized_heuristics[self.state_tuple] = AStar_evaluation
-        return AStar_evaluation
+        a_star_evaluation = heuristic + self.cost
+
+        memoized_heuristics[self.state_tuple] = a_star_evaluation  # Memoize the heuristic value
+        return a_star_evaluation
     
     def disjoint_pattern_database(self,conn, mem_heuristics=False):
         """
@@ -213,7 +218,6 @@ def a_star_search(given_state, n, verbose=False, getTime=False,heuristic='m',mem
     while not frontier.empty():
         current_node = frontier.get()
         current_node = current_node[2]
-        
 
         
         children = current_node.expand()
@@ -443,10 +447,10 @@ def number_of_moves(input_list,n):
     for pattern in patterns:
         result.append(pattern)
     for pattern in patterns:
-        #print('\n solving: ',pattern)
-        a_star_solution = a_star_search(pattern, n, verbose=False,heuristic='m')
-        number_of_moves = len(a_star_solution[0])
-        #print('\n cost: ',number_of_moves)
+        print('\n solving: ',pattern)
+        goal = determine_goal_state(pattern, n)
+        root = State(pattern, None, None, 0, 0, goal, n)
+        number_of_moves = root.manhattan_modified(True)
         result.append(number_of_moves)
         cost += number_of_moves
     result.append(cost)
@@ -460,9 +464,9 @@ def number_of_moves(input_list,n):
 ##Some examples for testing:
 
 # Example input_list
-# input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
-# result = number_of_moves(input_list,n=3)
-# print(result)
+input_list = [1, 8, 2, 0, 4, 3, 7, 6, 5]
+result = number_of_moves(input_list,n=3)
+print(result)
 
 # input_list = [1, 8, 2, 0, 4, 3, 7, 5, 6]
 # result = number_of_moves(input_list,n=3)
